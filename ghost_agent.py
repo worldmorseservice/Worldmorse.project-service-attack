@@ -4,7 +4,7 @@ from playwright.async_api import async_playwright
 
 async def start():
     async with async_playwright() as p:
-        print("--- GHOST AGENT: FINAL TRANSMISSION ---")
+        print("--- GHOST AGENT: FORCING TRANSMISSION ---")
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         try:
@@ -16,40 +16,38 @@ async def start():
             print("Setting Identity...")
             await page.fill('input[placeholder*="例: JA1ABC"]', "Worldmorse_AI")
             await page.fill('input[placeholder*="例: Taro"]', "Gemini_Agent")
-            await asyncio.sleep(1)
-
-            # 2. 「保存」ボタンをクリック
-            print("Saving profile...")
+            
+            # 保存ボタンをクリック
             save_button = page.get_by_text("保存")
             await save_button.click()
-            await asyncio.sleep(3) # 画面切り替え待ち
+            await asyncio.sleep(3)
 
-            # 3. メッセージを入力
-            print("Preparing message...")
-            textarea = await page.query_selector('textarea')
-            if textarea:
-                await textarea.fill("CQ DE Worldmorse_AI")
-                await asyncio.sleep(1)
-                
-                # 4. 【重要】緑色の「この内容を送信」ボタンを直接クリック
-                print("Clicking TRANSMIT button...")
-                # ボタンのテキスト「この内容を送信」を狙い撃ちします
-                send_button = page.get_by_text("この内容を送信")
-                if await send_button.is_visible():
-                    await send_button.click()
-                    print("TRANSMITTED SUCCESSFULLY!")
-                else:
-                    # 見つからない場合はEnterキーを念押し
-                    await page.keyboard.press("Enter")
-                
-                await asyncio.sleep(3)
-                await page.screenshot(path="mission_complete.png")
+            # 2. メッセージを入力
+            print("Typing message...")
+            await page.fill('textarea', "CQ DE Worldmorse_AI")
+            await asyncio.sleep(1)
+
+            # 3. 【最重要】「この内容を送信」ボタンを強制クリック
+            print("Locating TRANSMIT button...")
+            # ボタン要素を直接指定してクリックします
+            send_button = page.locator('button:has-text("この内容を送信")')
+            
+            if await send_button.count() > 0:
+                print("Clicking the green button now...")
+                await send_button.click()
+                # クリックが反映されるまで少し待つ
+                await asyncio.sleep(2)
+                print("TRANSMISSION COMPLETE!")
             else:
-                print("Textarea not found.")
+                print("Button not found by text, trying fallback Enter key...")
+                await page.keyboard.press("Enter")
+            
+            # 最終確認の撮影
+            await page.screenshot(path="after_click_verification.png")
 
         except Exception as e:
             print(f"ERROR: {e}")
-            await page.screenshot(path="final_debug_error.png")
+            await page.screenshot(path="final_debug.png")
         finally:
             await browser.close()
             print("--- AGENT OFFLINE ---")
