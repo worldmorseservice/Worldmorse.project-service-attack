@@ -25,6 +25,6 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TARGET_URL: "https://worldmorse-project.onrender.com"
-   run: |
-          # ghost_agent.py を探して実行する
+        run: |
+          # ghost_agent.py を実行する
           python ghost_agent.py
