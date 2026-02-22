@@ -25,13 +25,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TARGET_URL: "https://worldmorse-project.onrender.com"
-        run: |
-          # ここが「探し出す魔法」です
-          AGENT_FILE=$(find . -name "agent.py" -print -quit)
-          if [ -z "$AGENT_FILE" ]; then
-            echo "ERROR: agent.py がリポジトリ内のどこにも見つかりません！"
-            ls -R
-            exit 1
-          fi
-          echo "Found agent.py at: $AGENT_FILE"
+      run: |
+          # agent.py ではなく ghost_agent.py を探して実行する
+          AGENT_FILE=$(find . -name "ghost_agent.py" -print -quit)
           python "$AGENT_FILE"
