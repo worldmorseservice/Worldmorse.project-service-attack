@@ -15,7 +15,20 @@ async def main():
         # オンライン局の人数を確認
         # 画面上の「0局」や「1局」というテキストを探す
         online_status = await page.inner_text('.online-count-selector') # セレクタは必要に応じて調整
-
+　　　　　
+　　　　 # サイトにアクセス
+        await page.goto("https://worldmorse-project.onrender.com", wait_until="networkidle")
+        
+        # 1. ページ全体から「局」という文字が含まれる要素を探す（より柔軟な探し方）
+        try:
+            # 5秒だけ待ってみる
+            element = await page.wait_for_selector("text=/局/", timeout=5000)
+            online_status = await element.inner_text()
+            print(f"取得したステータス: {online_status}")
+        except:
+            # もし見つからなければ、一旦「1局」とみなして進む（テスト用）
+            print("人数表示が見つかりませんでしたが、続行します。")
+            online_status = "1局"
         if "1局" in online_status:
             print("管理者が1人でログイン中。メッセージを送信します。")
             
