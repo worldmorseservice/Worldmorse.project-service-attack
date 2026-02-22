@@ -2,49 +2,42 @@ import os
 import asyncio
 from playwright.async_api import async_playwright
 
-async def main():
+async def run():
     async with async_playwright() as p:
-        # ブラウザを起動
+        # ブラウザを起動（ヘッドレスモード）
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         
-        # サイトにアクセス
-        await page.goto("https://worldmorse-project.onrender.com")
-        await asyncio.sleep(5) # 読み込み待ち
-
-        # オンライン局の人数を確認
-        # 画面上の「0局」や「1局」というテキストを探す
-        online_status = await page.inner_text('.online-count-selector') # セレクタは必要に応じて調整
-　　　　　
-　　　　 # サイトにアクセス
+        # サイトへ移動（読み込み完了まで待機）
+        print("WorldMorseに接続中...")
         await page.goto("https://worldmorse-project.onrender.com", wait_until="networkidle")
         
-        # 1. ページ全体から「局」という文字が含まれる要素を探す（より柔軟な探し方）
-        try:
-            # 5秒だけ待ってみる
-            element = await page.wait_for_selector("text=/局/", timeout=5000)
-            online_status = await element.inner_text()
-            print(f"取得したステータス: {online_status}")
-        except:
-            # もし見つからなければ、一旦「1局」とみなして進む（テスト用）
-            print("人数表示が見つかりませんでしたが、続行します。")
-            online_status = "1局"
-        if "1局" in online_status:
-            print("管理者が1人でログイン中。メッセージを送信します。")
+        # 5秒待機して画面を安定させる
+        await asyncio.sleep(5)
+
+        # 画面上に「1局」という文字があるかチェック
+        content = await page.content()
+        if "1局" in content:
+            print("ターゲット確認：管理者が1人で待機中。出動します。")
             
-            # メッセージ入力（例として固定。OpenAI API連携も可能）
+            # メッセージを入力して送信
             message = "CQ DE AI_GHOST. UR SIG 5NN. 73 K"
             
-            # 翻訳機を操作
-            await page.fill('textarea[placeholder="テキストを入力..."]', message)
-            await page.click('button:has-text("テキスト → モールス")')
-            await asyncio.sleep(2)
-            await page.click('button:has-text("この内容を送信")')
-            print(f"送信完了: {message}")
+            # セレクタを使わず、入力欄を探して入力
+            await page.fill('textarea', message)
+            # 送信ボタン（モールス変換ボタンなど）を特定してクリック
+            # サイトの仕様に合わせて「送信」や「変換」ボタンを狙い撃ち
+            try:
+                await page.click('button:has-text("送信")')
+                print(f"送信成功: {message}")
+            except:
+                print("ボタンクリックに失敗しましたが、入力は試みました。")
         else:
-            print(f"現在の状況: {online_status}。出番ではありません。")
+            print("現在は1局ではありません。出番を待ちます。")
 
         await browser.close()
 
+if __name__ == "__main__":
+    asyncio.run(run())
 if __name__ == "__main__":
     asyncio.run(main())
