@@ -18,8 +18,7 @@ jobs:
           playwright install chromium
       - name: Run AI Agent
         run: python ghost_agent.py
-
-      # ★ 撮った写真を保存する設定
+        continue-on-error: true
       - name: Upload Screenshots
         uses: actions/upload-artifact@v4
         if: always()
