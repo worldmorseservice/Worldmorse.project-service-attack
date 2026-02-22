@@ -22,16 +22,11 @@ jobs:
           pip install playwright openai
           playwright install chromium
 
-      - name: Run AI Agent Script
+     name: Run AI Agent Script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TARGET_URL: "https://worldmorse-project.onrender.com"
         run: |
-          # agent.py がどこにあっても見つけ出して実行する
           AGENT_PATH=$(find . -name "agent.py" -print -quit)
-          if [ -z "$AGENT_PATH" ]; then
-            echo "Error: agent.py not found anywhere in the repository!"
-            exit 1
-          fi
           echo "Found agent.py at: $AGENT_PATH"
           python "$AGENT_PATH"
