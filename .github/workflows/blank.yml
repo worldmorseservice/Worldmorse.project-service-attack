@@ -13,6 +13,7 @@ jobs:
         with:
           python-version: '3.10'
 
+      # ★ 日本語の□□□を直すための設定
       - name: Install Japanese Fonts
         run: |
           sudo apt-get update
