@@ -1,8 +1,6 @@
 name: Morse-AI-Agent
 
 on:
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch: 
 
 jobs:
@@ -10,21 +8,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
       - name: Install dependencies
         run: |
-          pip install playwright openai
+          pip install playwright
           playwright install chromium
+      - name: Run AI Agent
+        run: python ghost_agent.py
 
-      - name: Run AI Agent Script
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          TARGET_URL: "https://worldmorse-project.onrender.com"
-        run: |
-          # ghost_agent.py を実行する
-          python ghost_agent.py
+      # ★ 撮った写真を保存する設定
+      - name: Upload Screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-evidence
+          path: "*.png"
