@@ -8,27 +8,28 @@ async def start():
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         try:
-            # サイトへ接続
+            print("Connecting...")
             await page.goto("https://worldmorse-project.onrender.com", wait_until="networkidle", timeout=60000)
             await asyncio.sleep(5)
-            
+
             # ポップアップをEscキーで消す
+            print("Closing popup...")
             await page.keyboard.press("Escape")
             await asyncio.sleep(2)
             
-            # フォントが効いているか確認のための撮影
+            # フォントが反映されたか確認する写真
             await page.screenshot(path="font_check.png")
 
-            # 文字が読めなくても、入力欄（textarea）があれば書き込む
+            # 入力欄（textarea）を探して書き込む
             textarea = await page.query_selector('textarea')
             if textarea:
-                print("Textarea found! Injecting message...")
+                print("Textarea found! Sending message...")
                 await textarea.fill("CQ DE AI_GHOST")
                 await page.keyboard.press("Enter")
                 await asyncio.sleep(3)
-                await page.screenshot(path="after_send.png")
+                await page.screenshot(path="success_result.png")
             else:
-                print("Textarea not found. Trying another way...")
+                print("Textarea not found.")
                 
         except Exception as e:
             print(f"ERROR: {e}")
