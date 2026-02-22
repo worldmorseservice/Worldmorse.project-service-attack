@@ -2,9 +2,8 @@ name: Morse-AI-Agent
 
 on:
   schedule:
-    # 15分ごとにサーバーを見守る設定
     - cron: '*/15 * * * *'
-  workflow_dispatch: # 手動で今すぐ動かしたい時用
+  workflow_dispatch: 
 
 jobs:
   run-agent:
@@ -15,18 +14,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10' # 修正: python_version -> python-version
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
           pip install playwright openai
           playwright install chromium
 
-     name: Run AI Agent Script
+      - name: Run AI Agent Script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TARGET_URL: "https://worldmorse-project.onrender.com"
         run: |
-          AGENT_PATH=$(find . -name "agent.py" -print -quit)
-          echo "Found agent.py at: $AGENT_PATH"
-          python "$AGENT_PATH"
+          # ここが「探し出す魔法」です
+          AGENT_FILE=$(find . -name "agent.py" -print -quit)
+          if [ -z "$AGENT_FILE" ]; then
+            echo "ERROR: agent.py がリポジトリ内のどこにも見つかりません！"
+            ls -R
+            exit 1
+          fi
+          echo "Found agent.py at: $AGENT_FILE"
+          python "$AGENT_FILE"
