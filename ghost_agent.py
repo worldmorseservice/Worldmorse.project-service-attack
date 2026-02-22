@@ -7,22 +7,23 @@ async def start():
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         try:
-            # あなたのサイトへアクセス
             await page.goto("https://worldmorse-project.onrender.com", wait_until="networkidle")
             await asyncio.sleep(5)
             
+            # ★ 証拠写真を撮る
+            await page.screenshot(path="evidence.png")
+            print("SCREENSHOT TAKEN: evidence.png")
+            
             content = await page.content()
             if "1局" in content:
-                print("TARGET FOUND: SENDING MORSE MESSAGE")
-                # テキストエリアに入力
+                print("TARGET FOUND")
                 await page.fill('textarea', "CQ DE AI_GHOST")
-                # 送信ボタンをクリック
-                btn = await page.query_selector('button:has-text("送信")')
-                if btn:
-                    await btn.click()
-                print("MESSAGE SENT SUCCESS")
+                await page.keyboard.press("Enter")
+                # 送信後の様子も撮っておく
+                await asyncio.sleep(2)
+                await page.screenshot(path="after_send.png")
             else:
-                print("TARGET NOT FOUND: IDLE STATUS")
+                print("TARGET NOT FOUND")
         except Exception as e:
             print(f"ERROR: {e}")
         finally:
