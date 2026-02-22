@@ -4,31 +4,34 @@ from playwright.async_api import async_playwright
 
 async def start():
     async with async_playwright() as p:
-        print("--- STARTING GHOST AGENT ---")
+        print("--- GHOST AGENT STARTING ---")
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         try:
-            print("Connecting...")
-            # サイトを開く
+            # サイトへ接続
             await page.goto("https://worldmorse-project.onrender.com", wait_until="networkidle", timeout=60000)
+            await asyncio.sleep(5)
             
-            # 【重要】ここで写真を撮る命令
-            print("Taking screenshot...")
-            await page.screenshot(path="evidence.png")
+            # ポップアップをEscキーで消す
+            await page.keyboard.press("Escape")
+            await asyncio.sleep(2)
             
-            content = await page.content()
-            if "1局" in content:
-                print("TARGET FOUND")
-                await page.fill('textarea', "CQ DE AI_GHOST")
+            # フォントが効いているか確認のための撮影
+            await page.screenshot(path="font_check.png")
+
+            # 文字が読めなくても、入力欄（textarea）があれば書き込む
+            textarea = await page.query_selector('textarea')
+            if textarea:
+                print("Textarea found! Injecting message...")
+                await textarea.fill("CQ DE AI_GHOST")
                 await page.keyboard.press("Enter")
-                await asyncio.sleep(2)
-                # 送信後の写真
+                await asyncio.sleep(3)
                 await page.screenshot(path="after_send.png")
             else:
-                print("TARGET NOT FOUND")
+                print("Textarea not found. Trying another way...")
+                
         except Exception as e:
             print(f"ERROR: {e}")
-            # エラー時も写真を撮る
             await page.screenshot(path="error.png")
         finally:
             await browser.close()
