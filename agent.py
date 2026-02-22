@@ -2,42 +2,45 @@ import os
 import asyncio
 from playwright.async_api import async_playwright
 
-async def run():
+async def main():
     async with async_playwright() as p:
         # ブラウザを起動（ヘッドレスモード）
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         
-        # サイトへ移動（読み込み完了まで待機）
+        # サイトへ移動
         print("WorldMorseに接続中...")
         await page.goto("https://worldmorse-project.onrender.com", wait_until="networkidle")
         
-        # 5秒待機して画面を安定させる
+        # 画面が安定するまで少し待つ
         await asyncio.sleep(5)
 
-        # 画面上に「1局」という文字があるかチェック
+        # 画面の全テキストを取得して人数を確認
         content = await page.content()
         if "1局" in content:
             print("ターゲット確認：管理者が1人で待機中。出動します。")
             
-            # メッセージを入力して送信
+            # 送信するメッセージ
             message = "CQ DE AI_GHOST. UR SIG 5NN. 73 K"
             
-            # セレクタを使わず、入力欄を探して入力
-            await page.fill('textarea', message)
-            # 送信ボタン（モールス変換ボタンなど）を特定してクリック
-            # サイトの仕様に合わせて「送信」や「変換」ボタンを狙い撃ち
+            # メッセージを入力欄（textarea）に書き込む
             try:
+                await page.fill('textarea', message)
+                # 送信に関わるボタン（変換や送信）を順にクリック
+                # サイトのボタン名に合わせて調整していますが、まずはテキストで探します
+                if await page.query_selector('button:has-text("変換")'):
+                    await page.click('button:has-text("変換")')
+                    await asyncio.sleep(1)
+                
                 await page.click('button:has-text("送信")')
-                print(f"送信成功: {message}")
-            except:
-                print("ボタンクリックに失敗しましたが、入力は試みました。")
+                print(f"送信処理を完了しました: {message}")
+            except Exception as e:
+                print(f"入力または送信中にエラーが発生しましたが、続行しました: {e}")
         else:
             print("現在は1局ではありません。出番を待ちます。")
 
         await browser.close()
 
 if __name__ == "__main__":
-    asyncio.run(run())
-if __name__ == "__main__":
+    # ここを main() に修正しました
     asyncio.run(main())
