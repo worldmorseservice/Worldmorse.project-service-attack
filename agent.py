@@ -4,43 +4,51 @@ from playwright.async_api import async_playwright
 
 async def main():
     async with async_playwright() as p:
-        # ブラウザを起動（ヘッドレスモード）
+        # ブラウザを起動
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         
-        # サイトへ移動
-        print("WorldMorseに接続中...")
-        await page.goto("https://worldmorse-project.onrender.com", wait_until="networkidle")
-        
-        # 画面が安定するまで少し待つ
-        await asyncio.sleep(5)
+        try:
+            print("WorldMorseに接続中...")
+            # タイムアウトを長めに設定
+            await page.goto("https://worldmorse-project.onrender.com", wait_until="networkidle", timeout=60000)
+            
+            # 画面が安定するまで待機
+            await asyncio.sleep(5)
 
-        # 画面の全テキストを取得して人数を確認
-        content = await page.content()
-        if "1局" in content:
-            print("ターゲット確認：管理者が1人で待機中。出動します。")
+            # ページ全体のテキストを取得
+            content = await page.content()
             
-            # 送信するメッセージ
-            message = "CQ DE AI_GHOST. UR SIG 5NN. 73 K"
-            
-            # メッセージを入力欄（textarea）に書き込む
-            try:
+            # 「1局」という文字があるか判定
+            if "1局" in content:
+                print("ターゲット確認：管理者が1人で待機中。出動します。")
+                message = "CQ DE AI_GHOST. UR SIG 5NN. 73 K"
+                
+                # 入力と送信の試行
                 await page.fill('textarea', message)
-                # 送信に関わるボタン（変換や送信）を順にクリック
-                # サイトのボタン名に合わせて調整していますが、まずはテキストで探します
-                if await page.query_selector('button:has-text("変換")'):
-                    await page.click('button:has-text("変換")')
+                
+                # ボタンを探してクリック（変換ボタンがあれば押す）
+                convert_btn = await page.query_selector('button:has-text("変換")')
+                if convert_btn:
+                    await convert_btn.click()
                     await asyncio.sleep(1)
                 
-                await page.click('button:has-text("送信")')
-                print(f"送信処理を完了しました: {message}")
-            except Exception as e:
-                print(f"入力または送信中にエラーが発生しましたが、続行しました: {e}")
-        else:
-            print("現在は1局ではありません。出番を待ちます。")
+                # 送信ボタンを押す
+                send_btn = await page.query_selector('button:has-text("送信")')
+                if send_btn:
+                    await send_btn.click()
+                    print(f"送信完了: {message}")
+                else:
+                    # ボタン名が違う可能性を考慮して「送信」を含むものを探す
+                    await page.click('button:get-by-text("送信")')
+            else:
+                print("現在は1局ではありません。出番を待ちます。")
 
-        await browser.close()
+        except Exception as e:
+            print(f"実行中にエラーが発生しました: {e}")
+        finally:
+            await browser.close()
 
 if __name__ == "__main__":
-    # ここを main() に修正しました
+    # ここで確実に main() を呼び出します
     asyncio.run(main())
